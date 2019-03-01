@@ -7,6 +7,7 @@
 #include <QtWidgets>
 #include <QInputDialog>
 #include <QFlags>
+#include <QtXml>
 
 class QTextEdit;
 class QLineEdit;
@@ -24,8 +25,11 @@ private:
     QString          inputToText;
     QComboBox*       m_UserList;
     QString          xmlMsg;
-    QString          str;
+
+
     void             sendData(QString str);
+
+    QMap<QTcpSocket*,QString> usersList;
 
 public:
     MyClient        (const QString& strHost,
@@ -33,6 +37,9 @@ public:
                      QWidget*       pwgt = 0,
                      QString        userNickName = "");
     QString          NickName;
+    QString          traverseNode(QDomNode& domNode, QString &str2);
+    QString          str2;
+    QString          str;
 
     // флаги для сообщений
     enum Option
@@ -54,21 +61,3 @@ private slots:
     void slotConnected   (                            );  
     void slotSendNick    (                            );
 };
-
-class InputDialog : public QDialog {
-Q_OBJECT
-
-private:
-//    QLineEdit* m_ptxtFirstName;
-
-public:
-    InputDialog     (QWidget* pwgt = 0);
-    QLineEdit*      m_ptxtFirstName;
-    QString         slotGiveNickName();
-    QString         userNickName;
-//private slots:
-//    void slotGiveNickName();
-};
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(MyClient::Options)
-#endif // MYCLIENT_H
