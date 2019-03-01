@@ -9,6 +9,8 @@
 #include <QWidget>
 #include <stdlib.h>
 #include <QFlags>
+#include <QtXml>
+#include <stdio.h>
 
 MyClient::MyClient(const QString& strHost,
                    int            nPort,
@@ -54,6 +56,7 @@ MyClient::MyClient(const QString& strHost,
 
 //***********************************************************************
 // получение данных от сервера
+
 void MyClient::slotReadyRead()
 {
     QDataStream in(m_pTcpSocket);
@@ -69,13 +72,80 @@ void MyClient::slotReadyRead()
         if (m_pTcpSocket->bytesAvailable() < m_nNextBlockSize) {
             break;
         }
-        QTime   time;
-        QString str;
+
         in >> str;
-        m_ptxtInfo->append(time.toString()+" "+ str);
+//      m_ptxtInfo->append(time.toString()+ " " + str);
         m_nNextBlockSize = 0;
     }
-    qDebug() << "slotReadyRead works";
+
+    qDebug() << "new msg!:" << str.toUtf8().constData();
+
+    printf("%s\n", str.toUtf8().constData());
+   // printf("%s",str);
+
+    QDomDocument doc;
+    doc.setContent(str);
+    QDomElement domElement = doc.documentElement();
+
+    QDomNode domNode = domElement.firstChild();
+    while(!domNode.isNull()) {
+    traverseNode(domNode, str2);
+    }
+
+
+
+    usersList.insert(m_pTcpSocket, str2);
+
+    QMap<QTcpSocket*,QString>::const_iterator i = usersList.constBegin();
+
+    while (i != usersList.constEnd()) {
+
+        qDebug() << i.key() << ": " << i.value();
+
+//        sendToClient(i.key(),str);
+
+        ++i;
+
+    }
+
+}
+
+//***********************************************************************
+
+// "<data><type>3</type><client id = 1><nickname>Ei</nickname></client></data>"
+
+
+QString MyClient::traverseNode(QDomNode& domNode,QString& str2)
+{
+
+        if(domNode.isElement()) {
+           QDomElement domElement = domNode.toElement();
+           if(!domElement.isNull()) {
+                qDebug() << "TagName: " << domElement.tagName();
+                qDebug() << "Text: "    << domElement.text();
+
+
+
+          if(domElement.tagName() == "client") {
+                qDebug() << " with attribute: " << domElement.attribute("id", "");
+                str2 = domElement.text();
+                qDebug() << "TagName: " << domElement.tagName()
+                         << "\tText: "  << domElement.text();
+//                qDebug() << "str2 from traverseNode: " << str2;
+//                usersList.insert(pClientSocket, str2);
+//                if (usersList.contains(str2)) {
+//                    qDebug() << "slotReadClient" << usersList.value(str2);
+                }
+
+                }
+
+           }
+
+
+
+domNode = domNode.nextSibling();
+//traverseNode(domNode);
+return str2; // str2 - ник из хмл
 }
 
 //***********************************************************************
@@ -124,7 +194,7 @@ void MyClient::slotSendNick()
             "</nickname></data>";
 
     sendData(str);
-    qDebug() << "nick from client: " << str;
+ //   qDebug() << "nick from client: " << str;
 }
 
 //***********************************************************************
