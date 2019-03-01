@@ -1,4 +1,4 @@
 # MyClientXml
-version 1.0 (Qt only)
+version 1.0 (Ojiajia only)
 
 отправляет xml сообщение на сервер
